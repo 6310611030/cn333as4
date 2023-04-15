@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -17,11 +18,14 @@ import androidx.compose.ui.unit.sp
 import com.example.randomimage.ui.theme.RandomImageTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalFocusManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,16 +56,30 @@ fun RandomImage() {
         "fashion", "shoes", "watch", "furniture")
     var selectedCategory by remember { mutableStateOf(imageCategory[0])}
     var url by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     Column(modifier = Modifier.padding(32.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val widthInt = width.toIntOrNull()
+        val heightInt = height.toIntOrNull()
+
+        if ((widthInt != null && heightInt != null) && (widthInt !in 8..2000 || heightInt !in 8..2000)) {
+            Text(
+                text = "Please enter values between 8 and 2000 for width and height.",
+                color = Color.Red,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+        }
         Text(text = "Random Image",
             fontSize = 36.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
-        Spacer(Modifier.height(128.dp))
+        Spacer(Modifier.height(32.dp))
         TextField(
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next
+            ),
             label = {Text(text = "Width",
                 fontSize = 24.sp,)},
             value = width,
@@ -70,7 +88,12 @@ fun RandomImage() {
         )
         Spacer(Modifier.height(16.dp))
         TextField(
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }),
             label = {Text("Height",
                 fontSize = 24.sp,)},
             value = height,
@@ -119,9 +142,27 @@ fun RandomImage() {
             modifier = Modifier.fillMaxWidth(),) {
             Text(text = "Display Image")
         }
-        if (url.isNotEmpty()) {
-            DisplayImage(src = url)
+        Box (modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center){
+            if (url.isNotEmpty()) {
+                if (width == "" || height == "") {
+                    Text(
+                        text = "Please enter values between 8 and 2000 for width and height.",
+                        color = Color.Red,
+                    )
+                }
+                if ((widthInt != null && heightInt != null) && (widthInt !in 8..2000 || heightInt !in 8..2000)){
+                    Text(
+                        text = "Please enter values between 8 and 2000 for width and height.",
+                        color = Color.Red,
+                    )
+                }else{
+                    DisplayImage(src = url)
+                }
+
+            }
         }
+
 
     }
 }
@@ -135,7 +176,7 @@ fun DisplayImage(src: String) {
             .build(),
         contentDescription = "",
         contentScale = ContentScale.Crop,
-        modifier = Modifier.size(225.dp)
+
     )
 }
 
